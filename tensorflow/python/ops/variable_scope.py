@@ -652,6 +652,10 @@ class _VariableStore(object):
       raise ValueError("Shape of a new variable (%s) must be fully defined, "
                        "but instead was %s." % (name, shape))
 
+    # Fill the integer array with zeros
+    if initializer is None and dtype.is_integer:
+      initializer = init_ops.zeros_initializer(shape=shape, dtype=dtype.base_dtype)
+      initializing_from_value=True
     # Create the tensor to initialize the variable.
     if initializer is None:
       initializer = init_ops.uniform_unit_scaling_initializer()
