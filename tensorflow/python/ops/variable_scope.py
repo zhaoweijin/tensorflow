@@ -525,9 +525,13 @@ class _VariableStore(object):
 
       var_full_name = "%s/part_%d" % (name, i)
       with ops.name_scope(var_full_name + "/PartitionedInitializer"):
+        # Create the tensor to initialize the variable.
         if initializer is None:
-          init = init_ops.uniform_unit_scaling_initializer()
-          init_shape = var_shape
+          init, initializing_from_value = self._get_default_initializer(shape=shape, dtype=dtype)
+          if initializing_from_value:
+            init_shape = None
+          else:
+            init_shape = var_shape 
         elif callable(initializer):
           init = initializer
           init_shape = var_shape
@@ -652,13 +656,10 @@ class _VariableStore(object):
       raise ValueError("Shape of a new variable (%s) must be fully defined, "
                        "but instead was %s." % (name, shape))
 
-    # Fill the integer array with zeros
-    if initializer is None and dtype.is_integer:
-      initializer = init_ops.zeros_initializer(shape=shape, dtype=dtype.base_dtype)
-      initializing_from_value=True
+
     # Create the tensor to initialize the variable.
     if initializer is None:
-      initializer = init_ops.uniform_unit_scaling_initializer()
+      initializer, initializing_from_value = self._get_default_initializer(shape=shape, dtype=dtype)
     # Clear control dependencies while creating the initializer.
     with ops.control_dependencies(None):
       if initializing_from_value:
@@ -692,6 +693,34 @@ class _VariableStore(object):
           ops.add_to_collection(ops.GraphKeys.REGULARIZATION_LOSSES, loss)
 
     return v
+
+
+  # Initialize variable when no initializer provided
+  def _get_default_initializer(self, shape=None, dtype=dtypes.float32):
+    """Use this function to provide a default and corresponding initializer of dtype
+
+    Args:
+      dtype: Type of the new or existing variable.(defaults to `DT_FLOAT`).
+
+    Returns:
+      initializer and initializing_from_value. See documentation of get_variable above.
+
+    Raises:
+      TypeError: When giving unsupported dtype.
+    """
+    if dtype.is_floating:
+      initializer = init_ops.uniform_unit_scaling_initializer()
+      initializing_from_value = False
+    elif dtype.is_string:
+      initializer = init_ops.strings_initializer(shape=shape, dtype=dtype.base_dtype)
+      initializing_from_value=True
+    elif dtype.is_integer or dtype.is_unsigned or dtype.is_bool or dtype.is_complex:
+      initializer = init_ops.zeros_initializer(shape=shape, dtype=dtype.base_dtype)
+      initializing_from_value=True
+    else:
+      raise TypeError("You need to give an initializer for %s" % dtype)
+
+    return initializer, initializing_from_value
 
 
 # To stop regularization, use this regularizer
