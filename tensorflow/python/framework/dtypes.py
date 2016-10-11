@@ -60,10 +60,12 @@ class DType(object):
   @@real_dtype
   @@is_ref_dtype
   @@as_ref
-  @@is_floating
+  @@is_bool
   @@is_complex
+  @@is_floating
   @@is_integer
   @@is_quantized
+  @@is_string
   @@is_unsigned
 
   @@as_numpy_dtype
@@ -136,15 +138,9 @@ class DType(object):
     return self._type_enum
 
   @property
-  def is_integer(self):
-    """Returns whether this is a (non-quantized) integer type."""
-    return (not self.is_quantized and
-            issubclass(self.as_numpy_dtype, np.integer))
-
-  @property
-  def is_floating(self):
-    """Returns whether this is a (real) floating point type."""
-    return issubclass(self.as_numpy_dtype, np.floating)
+  def is_bool(self):
+    """Returns whether this is a boolean data type"""
+    return self.base_dtype == bool
 
   @property
   def is_complex(self):
@@ -152,9 +148,25 @@ class DType(object):
     return self.base_dtype in (complex64, complex128)
 
   @property
+  def is_floating(self):
+    """Returns whether this is a (real) floating point type."""
+    return issubclass(self.as_numpy_dtype, np.floating)
+
+  @property
+  def is_integer(self):
+    """Returns whether this is a (non-quantized) integer type."""
+    return (not self.is_quantized and
+            issubclass(self.as_numpy_dtype, np.integer))
+
+  @property
   def is_quantized(self):
     """Returns whether this is a quantized data type."""
     return self.base_dtype in [qint8, quint8, qint16, quint16, qint32, bfloat16]
+
+  @property
+  def is_string(self):
+    """Returns whether this is a string data type"""
+    return self.base_dtype == string
 
   @property
   def is_unsigned(self):
