@@ -1152,6 +1152,37 @@ def matrix_transpose(a, name="matrix_transpose"):
 # pylint: enable=invalid-name
 
 
+def strings(shape, dtype=dtypes.string, name=None):
+  """Create a tensor with all elements set to ''(empty string)
+  
+  This operation returns a tensor of type `dtype` with shape `shape` and
+  all elements set to ''(empty string).
+  
+  For example:
+
+  ```python
+  tf.strings([2,3], tf.string) ==> [['', '', ''], ['', '', '']]
+  ```
+  Args:
+    shape: Either a list of integers, or a 1-D `Tensor` of type `string`.
+    dtype: The type of an element in the resulting `Tensor`.
+    name: A name for the operation (optional).
+
+  Returns:
+    A `Tensor` with all elements set to ''(empty string)
+  """
+  with ops.name_scope(name, 'strings', [shape]) as name:
+    string = ''
+    try:
+      shape = tensor_shape.as_shape(shape)
+      output = constant(string, shape=shape, dtype=dtype, name=name)
+    except (TypeError, ValueError):
+      shape = ops.convert_to_tensor(shape, dtype=dtypes.string, name="shape")
+      output = fill(shape, constant(string, dtype=dtype, name=name))
+    assert output.dtype.base_dtype == dtype
+    return output
+  
+
 def zeros(shape, dtype=dtypes.float32, name=None):
   """Creates a tensor with all elements set to zero.
 
