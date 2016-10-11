@@ -61,6 +61,11 @@ def _assert_float_dtype(dtype):
   return dtype
 
 
+def strings_initializer(shape, dtype=dtypes.string, partition_info=None):
+  """An adaptor for strings() to match the Initializer spec."""
+  return array_ops.strings(shape, dtype)
+
+
 def zeros_initializer(shape, dtype=dtypes.float32, partition_info=None):
   """An adaptor for zeros() to match the Initializer spec."""
   return array_ops.zeros(shape, dtype)
